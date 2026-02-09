@@ -6,6 +6,7 @@ namespace App\Providers;
 
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Stancl\JobPipeline\JobPipeline;
 use Stancl\Tenancy\Events;
@@ -70,6 +71,11 @@ class TenancyServiceProvider extends ServiceProvider
             Events\InitializingTenancy::class => [],
             Events\TenancyInitialized::class => [
                 Listeners\BootstrapTenancy::class,
+                function (Events\TenancyInitialized $event) {
+                    // This dynamically sets the session domain to the current tenant's domain
+                    $domain = request()->getHost();
+                    config(['session.domain' => $domain]);
+                },
             ],
 
             Events\EndingTenancy::class => [],
@@ -103,6 +109,9 @@ class TenancyServiceProvider extends ServiceProvider
         $this->mapRoutes();
 
         $this->makeTenancyMiddlewareHighestPriority();
+        if (str_contains(request()->getHost(), '.localhost')) {
+        URL::forceRootUrl(request()->getSchemeAndHttpHost());
+    }
     }
 
     protected function bootEvents()
