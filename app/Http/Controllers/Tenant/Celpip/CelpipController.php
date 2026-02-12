@@ -110,48 +110,59 @@ class CelpipController extends Controller
 
     public function storeFullStructure(Request $request)
     {
-        // 1. EXAM: Purana select kiya ya naya likha?
-        if ($request->new_exam_name) {
-            $exam = TenantExam::create([
-                'name' => $request->new_exam_name,
-                'slug' => Str::slug($request->new_exam_name)
-            ]);
-            $examId = $exam->id;
+        // 1. EXAM Handle Karein
+        // Agar existing exam select kiya hai toh usey lein, warna naya create karein
+        if ($request->exam_id && $request->exam_id !== 'NEW') {
+            $exam = TenantExam::findOrFail($request->exam_id);
         } else {
-            $examId = $request->existing_exam_id;
+            // firstOrCreate slug duplicate hone se bachayega
+            $exam = TenantExam::firstOrCreate(
+                ['slug' => Str::slug($request->new_exam_name)],
+                ['name' => $request->new_exam_name]
+            );
         }
 
-        // 2. MODULE: Purana select kiya ya naya likha?
-        if ($request->new_module_name) {
-            $module = ExamModule::create([
-                'exam_id' => $examId,
-                'name' => $request->new_module_name,
-                'slug' => Str::slug($request->new_module_name)
-            ]);
-            $moduleId = $module->id;
-        } else {
-            $moduleId = $request->existing_module_id;
+        // 2. MODULES & PARTS LOOP (Nested Data)
+        if ($request->has('modules')) {
+            foreach ($request->modules as $mKey => $mValue) {
+                if (empty($mValue['name'])) continue; // Skip agar name khali ho
+
+                // Module create karein ya purana fetch karein
+                $module = ExamModule::firstOrCreate([
+                    'exam_id' => $exam->id,
+                    'slug'    => Str::slug($mValue['name']),
+                ], [
+                    'name'    => $mValue['name']
+                ]);
+
+                // 3. PARTS LOOP
+                if (isset($mValue['parts'])) {
+                    foreach ($mValue['parts'] as $pKey => $pValue) {
+                        if (empty($pValue['name'])) continue;
+
+                        $part = ExamPart::firstOrCreate([
+                            'exam_module_id' => $module->id,
+                            'name'           => $pValue['name']
+                        ]);
+
+                        // 4. FORMS (Multiple Selection)
+                        if (isset($pValue['forms'])) {
+                            // Purane links hatakar naye link karein (Many-to-Many)
+                            // Agar Table Form hai toh sync use karein,
+                            // agar Form ki relationship 'part' se belongsTo hai toh update karein
+                            foreach ($pValue['forms'] as $formId) {
+                                $form = Form::find($formId);
+                                if ($form) {
+                                    $form->update(['exam_part_id' => $part->id]);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
-        // 3. PART: Purana select kiya ya naya likha?
-        if ($request->new_part_name) {
-            $part = ExamPart::create([
-                'exam_module_id' => $moduleId,
-                'name' => $request->new_part_name
-            ]);
-            $partId = $part->id;
-        } else {
-            $partId = $request->existing_part_id;
-        }
-
-        // 4. FORM (Always Create)
-        $form = Form::create([
-            'exam_part_id' => $partId,
-            'name' => $request->form_name,
-            'slug' => Str::slug($request->form_name)
-        ]);
-
-        return back()->with('success', 'Full Structure & Form Created!');
+        return back()->with('success', 'Full Structure Updated Successfully!');
     }
 
     // Dropdown updates ke liye helpers

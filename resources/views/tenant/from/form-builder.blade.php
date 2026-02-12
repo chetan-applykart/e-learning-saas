@@ -1,159 +1,258 @@
 @extends('app.layouts.app')
 
 @section('content')
-<div class="container-fluid py-4">
-    <form action="{{ route('exam.full.store') }}" method="POST">
-        @csrf
-        <div class="card shadow border-0">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
-                <h4 class="mb-0">Advance Exam Builder (Bulk)</h4>
-                <button type="submit" class="btn btn-success fw-bold px-4 shadow">SAVE FULL STRUCTURE</button>
-            </div>
 
-            <div class="card-body bg-light">
-                {{-- STEP 1: EXAM --}}
-                <div class="card mb-4 shadow-sm border-primary">
-                    <div class="card-body">
-                        <label class="fw-bold text-primary mb-2 small">STEP 1: EXAM SELECTION</label>
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <select name="existing_exam_id" class="form-select border-primary shadow-sm">
-                                    <option value="">-- Select Existing Exam --</option>
-                                    @foreach($exams as $exam)
-                                        <option value="{{ $exam->id }}">{{ $exam->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <input type="text" name="new_exam_name" class="form-control border-primary shadow-sm" placeholder="Or New Exam Name">
-                            </div>
-                        </div>
-                    </div>
+<style>
+    :root {
+        --primary: #4e73df;
+        --success: #1cc88a;
+        --light-bg: #f8f9fc;
+    }
+
+    body { background: var(--light-bg); }
+
+    .card {
+        border: none;
+        border-radius: 14px;
+        box-shadow: 0 0.2rem 1.5rem rgba(0,0,0,.05);
+    }
+
+    .card-header {
+        font-weight: 600;
+        letter-spacing: .5px;
+    }
+
+    .module-card {
+        background: #fff;
+        border-left: 4px solid var(--primary);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .part-row {
+        background: #f1f4f9;
+        padding: 8px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
+
+    .sticky-builder {
+        position: sticky;
+        top: 20px;
+    }
+
+    .badge-form {
+        background: #eef2ff;
+        color: var(--primary);
+        font-size: 12px;
+        margin: 2px;
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row">
+
+        <!-- LEFT SIDE BUILDER -->
+        <div class="col-lg-5">
+            <div class="card sticky-builder">
+                <div class="card-header bg-primary text-white">
+                    Advance Exam Builder
                 </div>
 
-                {{-- MODULE WRAPPER --}}
-                <div id="module-wrapper">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold">STEP 2: ADD MODULES, PARTS & FORMS</h5>
-                        <button type="button" id="add-module" class="btn btn-primary btn-sm rounded-pill px-3">+ Add Module</button>
+                <form action="{{ route('exam.full.store') }}" method="POST" id="examForm" class="card-body">
+                    @csrf
+
+                    <!-- STEP 1 -->
+                    <div class="mb-4">
+                        <label class="fw-bold mb-2">Step 1: Select or Create Exam</label>
+                        <select name="exam_id" id="exam_select" class="form-select">
+                            <option value="NEW">-- Create New Exam --</option>
+                            @foreach($exams as $e)
+                                <option value="{{ $e->id }}">{{ $e->name }}</option>
+                            @endforeach
+                        </select>
+
+                        <input type="text"
+                               name="new_exam_name"
+                               id="new_exam_input"
+                               class="form-control mt-2"
+                               placeholder="Enter New Exam Name">
+                    </div>
+
+                    <!-- STEP 2 -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <label class="fw-bold">Step 2: Modules & Parts</label>
+                        <button type="button" id="add-module" class="btn btn-sm btn-success">
+                            + Add Module
+                        </button>
+                    </div>
+
+                    <div id="dynamic-modules"></div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-4">
+                        SAVE FULL STRUCTURE
+                    </button>
+                </form>
+            </div>
+        </div>
+
+
+        <!-- RIGHT SIDE PREVIEW -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    Exam Structure Preview
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Exam</th>
+                                    <th>Module</th>
+                                    <th>Parts & Forms</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($exams as $e)
+                                    @php $rowspan = $e->modules->flatMap->parts->count(); @endphp
+                                    @foreach($e->modules as $mIndex => $m)
+                                        @foreach($m->parts as $pIndex => $p)
+                                            <tr>
+                                                @if($mIndex == 0 && $pIndex == 0)
+                                                    <td rowspan="{{ $rowspan }}" class="fw-bold ps-4">
+                                                        {{ $e->name }}
+                                                    </td>
+                                                @endif
+
+                                                @if($pIndex == 0)
+                                                    <td rowspan="{{ $m->parts->count() }}"
+                                                        class="fw-bold text-primary">
+                                                        {{ $m->name }}
+                                                    </td>
+                                                @endif
+
+                                                <td>
+                                                    <div class="fw-semibold small">
+                                                        {{ $p->name }}
+                                                    </div>
+
+                                                    @foreach($p->forms as $f)
+                                                        <span class="badge badge-form">
+                                                            {{ $f->name }}
+                                                        </span>
+                                                    @endforeach
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
         </div>
-    </form>
+
+    </div>
 </div>
 
+
+<!-- SCRIPTS -->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-let mIdx = 0;
-let pIdx = 0;
-let fIdx = 0;
+let moduleIndex = 0;
+let partIndex = 0;
 
-/* ================= 1. ADD MODULE ================= */
-$('#add-module').click(function(){
-    let mHtml = `
-        <div class="card mb-5 border-start border-5 border-primary shadow module-item" data-m="${mIdx}">
-            <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                <input type="text" name="modules[${mIdx}][name]" class="form-control fw-bold border-0 fs-5" placeholder="Module Name (e.g. Listening)" style="width: 70%">
-                <button type="button" class="btn btn-outline-danger btn-sm remove-module">Remove Module</button>
+function initSelect2() {
+    $('.select2').select2({
+        placeholder: "Select Forms",
+        width: '100%'
+    });
+}
+
+$(document).ready(function() {
+
+    $('#new_exam_input').hide();
+
+    $('#exam_select').change(function() {
+        if ($(this).val() === 'NEW') {
+            $('#new_exam_input').fadeIn();
+        } else {
+            $('#new_exam_input').fadeOut();
+        }
+    });
+
+    // ADD MODULE
+    $('#add-module').click(function() {
+
+        let m = moduleIndex++;
+
+        let moduleHtml = `
+        <div class="module-card" data-m="${m}">
+            <div class="d-flex mb-2">
+                <input type="text"
+                       name="modules[${m}][name]"
+                       class="form-control fw-bold"
+                       placeholder="Module Name">
+                <button type="button" class="btn btn-sm text-danger ms-2 remove-module">×</button>
             </div>
-            <div class="card-body bg-white p-4">
-                <div class="part-wrapper ms-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <label class="fw-bold text-muted small">PARTS IN THIS MODULE</label>
-                        <button type="button" class="btn btn-info btn-sm text-white add-part" data-m="${mIdx}">+ Add Part</button>
-                    </div>
-                    <div class="part-list"></div>
+
+            <div class="parts-container"></div>
+
+            <button type="button"
+                    class="btn btn-link btn-sm p-0 add-part"
+                    data-m="${m}">
+                + Add Part
+            </button>
+        </div>`;
+
+        $('#dynamic-modules').append(moduleHtml);
+    });
+
+
+    // ADD PART
+    $(document).on('click', '.add-part', function() {
+
+        let m = $(this).data('m');
+        let p = partIndex++;
+
+        let partHtml = `
+        <div class="part-row">
+            <div class="row g-2">
+                <div class="col-5">
+                    <input type="text"
+                           name="modules[${m}][parts][${p}][name]"
+                           class="form-control form-control-sm"
+                           placeholder="Part Name">
+                </div>
+                <div class="col-7">
+                    <select name="modules[${m}][parts][${p}][forms][]"
+                            class="form-select select2"
+                            multiple>
+                        @foreach($masterForms as $f)
+                            <option value="{{ $f->id }}">{{ $f->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
             </div>
         </div>`;
-    $('#module-wrapper').append(mHtml);
-    mIdx++;
-});
 
-/* ================= 2. ADD PART ================= */
-$(document).on('click', '.add-part', function(){
-    let m = $(this).data('m');
-    let pHtml = `
-        <div class="card mb-4 border-start border-4 border-info shadow-sm part-item" data-p="${pIdx}">
-            <div class="card-body bg-light">
-                <div class="input-group mb-3">
-                    <span class="input-group-text bg-info text-white fw-bold">Part Name</span>
-                    <input type="text" name="modules[${m}][parts][${pIdx}][name]" class="form-control fw-bold" placeholder="e.g. Part 1">
-                    <button type="button" class="btn btn-outline-danger remove-part">X</button>
-                </div>
-                <div class="form-wrapper ms-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <label class="fw-bold text-secondary x-small">FORMS (Question Types)</label>
-                        <button type="button" class="btn btn-warning btn-sm add-form" data-m="${m}" data-p="${pIdx}">+ Add Form</button>
-                    </div>
-                    <div class="form-list"></div>
-                </div>
-            </div>
-        </div>`;
-    $(this).closest('.part-wrapper').find('.part-list').append(pHtml);
-    pIdx++;
-});
+        $(this).siblings('.parts-container').append(partHtml);
+        initSelect2();
+    });
 
-/* ================= 3. ADD FORM ================= */
-$(document).on('click', '.add-form', function(){
-    let m = $(this).data('m');
-    let p = $(this).data('p');
-    let fHtml = `
-        <div class="card mb-3 border-warning shadow-sm form-item">
-            <div class="card-body p-3">
-                <div class="input-group mb-3">
-                    <span class="input-group-text bg-warning fw-bold">Form Name</span>
-                    <input type="text" name="modules[${m}][parts][${p}][forms][${fIdx}][name]" class="form-control" placeholder="e.g. Multiple Choice">
-                    <button type="button" class="btn btn-outline-danger remove-form">X</button>
-                </div>
-                <div class="field-wrapper border p-2 rounded bg-white">
-                    <label class="x-small fw-bold text-muted mb-2">DYNAMIC FIELDS (Questions/Labels)</label>
-                    <div class="field-list mb-2"></div>
-                    <button type="button" class="btn btn-link btn-sm text-decoration-none add-field" data-m="${m}" data-p="${p}" data-f="${fIdx}">+ Add Input Field</button>
-                </div>
-            </div>
-        </div>`;
-    $(this).closest('.form-wrapper').find('.form-list').append(fHtml);
-    fIdx++;
-});
+    // REMOVE MODULE
+    $(document).on('click', '.remove-module', function() {
+        $(this).closest('.module-card').remove();
+    });
 
-/* ================= 4. ADD FIELDS (Title, Input etc) ================= */
-$(document).on('click', '.add-field', function(){
-    let m = $(this).data('m');
-    let p = $(this).data('p');
-    let f = $(this).data('f');
-    let fieldHtml = `
-        <div class="row g-2 mb-2 field-item">
-            <div class="col-md-5">
-                <input type="text" name="modules[${m}][parts][${p}][forms][${f}][fields][][label]" class="form-control form-control-sm" placeholder="Field Label (e.g. Title)">
-            </div>
-            <div class="col-md-4">
-                <select name="modules[${m}][parts][${p}][forms][${f}][fields][][type]" class="form-select form-select-sm">
-                    <option value="text">Short Text</option>
-                    <option value="textarea">Large Text</option>
-                    <option value="file">File (Audio/Image)</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="text" name="modules[${m}][parts][${p}][forms][${f}][fields][][name]" class="form-control form-control-sm" placeholder="Slug">
-            </div>
-            <div class="col-md-1">
-                <button type="button" class="btn btn-danger btn-sm remove-field">X</button>
-            </div>
-        </div>`;
-    $(this).closest('.field-wrapper').find('.field-list').append(fieldHtml);
 });
-
-/* ================= REMOVAL LOGIC ================= */
-$(document).on('click', '.remove-module', function(){ $(this).closest('.module-item').remove(); });
-$(document).on('click', '.remove-part', function(){ $(this).closest('.part-item').remove(); });
-$(document).on('click', '.remove-form', function(){ $(this).closest('.form-item').remove(); });
-$(document).on('click', '.remove-field', function(){ $(this).closest('.field-item').remove(); });
 </script>
 
-<style>
-    .x-small { font-size: 11px; }
-    .btn-link:hover { color: #055160 !important; }
-</style>
 @endsection

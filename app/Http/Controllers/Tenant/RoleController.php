@@ -49,7 +49,7 @@ class RoleController extends Controller
         $user->syncPermissions($filteredPermissions);
 
         return redirect()
-            ->route('tenant.roles.index')
+            ->route('tenant.users.index')
             ->with('success', 'User access updated successfully!');
     }
 }

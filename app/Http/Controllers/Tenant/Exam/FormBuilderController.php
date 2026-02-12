@@ -15,8 +15,12 @@ class FormBuilderController extends Controller
 {
     public function create()
     {
-        $exams = Exam::where('status', 1)->get();
-        return view('tenant.from.form-builder', compact('exams'));
+        $exams = Exam::all();
+
+
+        $masterForms = Form::all();
+
+        return view('tenant.from.form-builder', compact('exams', 'masterForms'));
     }
     public function getModules($examId)
     {

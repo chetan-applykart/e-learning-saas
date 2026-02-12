@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TenantPermissionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Tenant\RoleController;
@@ -50,7 +51,11 @@ foreach (config('tenancy.central_domains') as $domain) {
         // Route::post('/tenant-permissions', [TenantPermissionController::class, 'store'])->name('admin.tenant.permissions.store');
 
 
+Route::group(['prefix' => 'super-admin', 'as' => 'admin.'], function () {
 
+    Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenant.create');
+    Route::post('/tenants/store', [TenantController::class, 'store'])->name('tenant.store');
+});
     Route::get('/tenants', [TenantPermissionController::class, 'index'])
         ->name('superadmin.tenants');
 

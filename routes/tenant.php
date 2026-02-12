@@ -102,8 +102,8 @@ Route::middleware([
     });
 
 
-    Route::get('/admin/form-builder', [FormBuilderController::class, 'create'])->name('form.builder');
-    Route::post('/admin/form-builder', [FormBuilderController::class, 'store'])->name('form.builder.store');
+    Route::get('/form-builder', [FormBuilderController::class, 'create'])->name('form.builder');
+    Route::post('/form-builder', [FormBuilderController::class, 'store'])->name('form.builder.store');
 
     Route::get('/get-modules/{exam}', [FormBuilderController::class, 'getModules']);
     Route::get('/get-parts/{module}', [FormBuilderController::class, 'getParts']);
