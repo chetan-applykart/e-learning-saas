@@ -16,11 +16,11 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-dd($request->all());
+        // dd($request->all());
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-dd(Auth::user());
+            // dd(Auth::user());
 
             return redirect()->route('tenant.dashboard');
         }
@@ -39,6 +39,4 @@ dd(Auth::user());
 
         return redirect('/login');
     }
-
-
 }

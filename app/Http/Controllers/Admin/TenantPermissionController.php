@@ -4,55 +4,64 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Stancl\Tenancy\Database\Models\Tenant;
+use App\Models\Tenant;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class TenantPermissionController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         $tenants = Tenant::all();
-
-        $permissions = Permission::whereNull('tenant_id')->get();
-
-        $tenantId = $request->tenant_id;
-
-        $assignedPermissions = [];
-
-        if ($tenantId) {
-            $assignedPermissions = DB::table('tenant_permissions')
-                ->where('tenant_id', $tenantId)
-                ->pluck('permission_id')
-                ->toArray();
-        }
-
-        return view(
-            'admin.tenant-permissions.index',
-            compact('tenants', 'permissions', 'assignedPermissions')
-        );
+        return view('admin.tenant-permissions.index', compact('tenants'));
     }
 
-    public function store(Request $request)
+    public function edit($id)
     {
-        // dd($request->all());
-        $tenantId = $request->tenant_id;
+        $tenant = Tenant::findOrFail($id);
 
-        DB::table('tenant_permissions')
-            ->where('tenant_id', $tenantId)
-            ->delete();
+        $data = $tenant->run(function () {
+            $allPermissions = Permission::all();
+            $allRoles = Role::all();
 
-        if ($request->permissions) {
-            foreach ($request->permissions as $permissionId) {
-                DB::table('tenant_permissions')->insert([
-                    'tenant_id'     => $tenantId,
-                    'permission_id' => $permissionId,
-                    'created_at'    => now(),
-                    'updated_at'    => now(),
-                ]);
-            }
-        }
+            $tenantAdminRole = Role::where('name', 'tenant-admin')->first();
 
-        return back()->with('success', 'Permissions saved successfully');
+            $activePermissions = $tenantAdminRole
+                ? $tenantAdminRole->permissions->pluck('name')->toArray()
+                : [];
+
+            return [
+                'permissions' => $allPermissions,
+                'roles' => $allRoles,
+                'activePermissions' => $activePermissions
+            ];
+        });
+
+        return view('admin.tenant-permissions.permissions', [
+            'tenant' => $tenant,
+            'permissions' => $data['permissions'],
+            'roles' => $data['roles'],
+            'activePermissions' => $data['activePermissions']
+        ]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $tenant = Tenant::findOrFail($id);
+
+        $tenant->run(function () use ($request) {
+            $role = Role::firstOrCreate([
+                'name' => 'tenant-admin',
+                'guard_name' => 'web'
+            ]);
+
+            $role->syncPermissions($request->permissions ?? []);
+
+            app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+        });
+
+        return redirect()
+            ->back()
+            ->with('success', 'Permissions updated and showing correctly now!');
     }
 }

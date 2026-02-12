@@ -45,41 +45,57 @@ foreach (config('tenancy.central_domains') as $domain) {
 
 
 
-        Route::get('/tenant-permissions', [TenantPermissionController::class, 'index'])->name('tenant.permissions');
+        // Route::get('/tenant-permissions', [TenantPermissionController::class, 'index'])->name('tenant.permissions');
 
-        Route::post('/tenant-permissions', [TenantPermissionController::class, 'store'])->name('admin.tenant.permissions.store');
+        // Route::post('/tenant-permissions', [TenantPermissionController::class, 'store'])->name('admin.tenant.permissions.store');
+
+
+
+    Route::get('/tenants', [TenantPermissionController::class, 'index'])
+        ->name('superadmin.tenants');
+
+    Route::get('/tenants/{id}/permissions', [TenantPermissionController::class, 'edit'])
+        ->name('superadmin.tenants.permissions');
+
+    Route::post('/tenants/{id}/permissions', [TenantPermissionController::class, 'update'])
+        ->name('superadmin.tenants.permissions.update');
 
         // Route::post('/tenant-permissions', function () {
         //     dd("dejdcd");
         //     return view('admin.dashboard');
         // })->name('tenant.permissions.store');
 
-        // Route::get('/create-tenant-domain/', function () {
-        //     $tenant = \App\Models\Tenant::firstOrCreate(
-        //         ['email' => 'test1@example.com'],
-        //         [
-        //             'id'       => 'test1',
-        //             'name'     => 'Test User',
-        //             'password' => Hash::make('password123'),
-        //         ]
-        //     );
+        Route::get('/create-tenant-domain/', function () {
+            $tenant = \App\Models\Tenant::firstOrCreate(
+                ['email' => 'test1@example.com'],
+                [
+                    'id'       => 'test1',
+                    'name'     => 'Test User',
+                    'password' => Hash::make('password123'),
+                ]
+            );
 
-        //     if (!$tenant->domains()->where('domain', 'test1.localhost')->exists()) {
-        //         $tenant->domains()->create([
-        //             'domain' => 'test1.localhost',
-        //         ]);
-        //     }
+            if (!$tenant->domains()->where('domain', 'test1.localhost')->exists()) {
+                $tenant->domains()->create([
+                    'domain' => 'test1.localhost',
+                ]);
+            }
 
-        //     return response()->json([
-        //         'message' => 'Tenant and Domain created successfully!',
-        //         'tenant_id' => $tenant->id
-        //     ]);
-        // });
+            return response()->json([
+                'message' => 'Tenant and Domain created successfully!',
+                'tenant_id' => $tenant->id
+            ]);
+        });
 
         // Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
 
-            // Dashboard
+        // Dashboard
 
         // });
+
+        Route::get('/tenants/{tenant}/permissions', [
+            TenantPermissionController::class,
+            'show'
+        ]);
     });
 }

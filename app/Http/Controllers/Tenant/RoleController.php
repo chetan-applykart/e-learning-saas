@@ -4,50 +4,52 @@ namespace App\Http\Controllers\Tenant;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Models\User;
 
 class RoleController extends Controller
 {
-    // List roles
     public function index()
     {
-        $roles = Role::where('tenant_id', tenant('id'))->get();
-        return view('tenant.roles.index', compact('roles'));
+        $users = User::where('id', '!=', auth()->id())->get();
+        return view('tenant.roles.index', compact('users'));
     }
 
-    // Create role form
-    public function create()
+    public function editAccess(User $user)
     {
-        $tenantId = tenant('id');
+        if (!auth()->user()->hasRole('tenant-admin') && $user->hasRole('tenant-admin')) {
+            return back()->with('error', 'Sirf Super Admin hi Tenant Admin ke permissions badal sakta hai!');
+        }
 
-        // 👉 Sirf wahi permissions jo super admin ne tenant ko allow ki hain
-        $permissions = Permission::whereIn('id', function ($q) use ($tenantId) {
-            $q->select('permission_id')
-              ->from('tenant_permissions')
-              ->where('tenant_id', $tenantId);
-        })->get();
+        $roles = Role::whereNotIn('name', ['tenant-admin'])->get();
 
-        return view('tenant.roles.create', compact('permissions'));
+        $permissions = auth()->user()->getAllPermissions();
+
+        return view('tenant.roles.access', compact('user', 'roles', 'permissions'));
     }
 
-    // Store role
-    public function store(Request $request)
+    public function updateAccess(Request $request, User $user)
     {
-        $request->validate([
-            'name' => 'required'
-        ]);
 
-        $role = Role::create([
-            'name'       => $request->name,
-            'guard_name' => 'web',
-            'tenant_id'  => tenant('id'),
-        ]);
+        if ($user->hasRole('tenant-admin')) {
+            return back()->with('error', 'Tenant Admin ki permissions "Protected" hain aur yahan se change nahi ho sakti!');
+        }
 
-        // 👉 Admin yahin se manage_users jaise permissions dega
-        $role->syncPermissions($request->permissions ?? []);
+        $allowedPermissions = auth()->user()->getAllPermissions()->pluck('name')->toArray();
+        $requestedPermissions = $request->permissions ?? [];
 
-        return redirect()->route('tenant.roles.index');
+        $filteredPermissions = array_intersect($requestedPermissions, $allowedPermissions);
+
+        $roles = collect($request->roles ?? [])
+            ->reject(fn($role) => $role === 'tenant-admin')
+            ->toArray();
+
+        $user->syncRoles($roles);
+        $user->syncPermissions($filteredPermissions);
+
+        return redirect()
+            ->route('tenant.roles.index')
+            ->with('success', 'User access updated successfully!');
     }
 }

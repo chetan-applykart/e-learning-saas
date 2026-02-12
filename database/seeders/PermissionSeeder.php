@@ -10,20 +10,18 @@ class PermissionSeeder extends Seeder
     public function run(): void
     {
         $permissions = [
-            'view_dashboard',
-            'manage_users',
-            'manage_roles',
-            'manage_courses',
-            'view_reports',
-            'manage_payments',
+            'manage-users',
+            'create-course',
+            'edit-course',
+            'delete-course',
+            'view-reports',
+            'manage-roles',
         ];
-
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate([
                 'name' => $permission,
                 'guard_name' => 'web',
-                'tenant_id' => null,
             ]);
         }
     }

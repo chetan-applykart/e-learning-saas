@@ -1,160 +1,231 @@
 @extends('app.layouts.app')
 
 @section('content')
-    <link href="{{ asset('assets/vendor/bootstrap-daterangepicker/daterangepicker.css') }}" rel="stylesheet">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
-    <script src="{{ asset('public/js/plugins/ckeditor/ckeditor.js') }}"></script>
 
-    <div class="block">
-        <div class="block-content">
-            <div class="row justify-content-center">
-                <div class="col-xl-12">
+<div class="block">
+    <div class="block-content">
+        <div class="row justify-content-center">
+            <div class="col-xl-12">
 
-                    <form method="POST"
-                        action="{{ route('admin.celpip.listening.store', $getListeningData[0]->id ?? null) }}"
-                        enctype="multipart/form-data">
-                        @csrf
+<form method="POST"
+      action="{{ route('tenant.celpip.listening.store') }}"
+      enctype="multipart/form-data">
 
-                        <input type="hidden" name="exam" value="">
+@csrf
 
-                        {{-- Alerts --}}
-                        @if (session('error'))
-                            <div class="alert alert-danger">{{ session('error') }}</div>
-                        @endif
-                        @if (session('success'))
-                            <div class="alert alert-success">{{ session('success') }}</div>
-                        @endif
+<input type="hidden" name="exam_id" value="{{ $exam->id }}">
+<input type="hidden" name="module_id" value="{{ $module->id }}">
 
-                        {{-- Header --}}
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <h3 id="headingTitle">Select form type</h3>
-                            </div>
-                            <div class="col-6">
-                                <select name="form_short_name" class="form-control" required>
-                                    <option value="">Select Form Type</option>
+{{-- PART SELECT --}}
+<div class="card mb-3">
+    <div class="card-body">
+        <label>Select Part</label>
+        <select name="part_id" id="partSelect" class="form-control" required>
+            <option value="">Select Part</option>
+            @foreach($parts as $part)
+                <option value="{{ $part->id }}">
+                    {{ $part->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+</div>
 
-                                    @foreach ($forms as $form)
-                                        <option value="{{ $form->form_short_name }}">
-                                            {{ $form->part_name }} — {{ $form->form_type }}
-                                        </option>
-                                    @endforeach
-                                </select>
+{{-- FORM SELECT --}}
+<div class="card mb-3">
+    <div class="card-body">
+        <label>Select Form</label>
+        <select name="form_id" id="formSelect" class="form-control" required>
+            <option value="">Select Form</option>
+        </select>
+    </div>
+</div>
 
-                            </div>
-                        </div>
+{{-- DYNAMIC FIELDS --}}
+<div id="dynamic-fields"></div>
 
-                        {{-- Title --}}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <label>Title</label>
-                                <input type="text" name="questionTitle" class="form-control"
-                                    value="{{ $getListeningData[0]->title ?? '' }}" required>
-                            </div>
-                        </div>
+<button class="btn btn-primary">Submit</button>
 
-                        {{-- Difficulty --}}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <label>Difficulty</label>
-                                <select name="difficulty" class="form-control">
-                                    <option value="">Select</option>
-                                    @foreach (['Low', 'Medium', 'Hard'] as $d)
-                                        <option value="{{ $d }}" @selected(($getListeningData[0]->difficulty ?? '') == $d)>
-                                            {{ $d }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
+</form>
 
-                        {{-- Audio --}}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <label>Upload Audio</label>
-                                <input type="file" name="audioPath" class="form-control">
-
-                                @if (!empty($getListeningData[0]->audioPath))
-                                    <audio controls class="w-100 mt-2">
-                                        <source src="{{ asset($getListeningData[0]->audioPath) }}">
-                                    </audio>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Video --}}
-                        <div class="card mb-3">
-                            <div class="card-body">
-                                <label>Upload Video</label>
-                                <input type="file" name="videoPath" class="form-control">
-
-                                @if (!empty($getListeningData[0]->videoPath))
-                                    <video controls class="w-100 mt-2">
-                                        <source src="{{ asset($getListeningData[0]->videoPath) }}">
-                                    </video>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- Transcript --}}
-                        <div class="card mb-3" id="transcriptrow">
-                            <div class="card-body">
-                                <label>Transcript</label>
-                                <textarea id="transcript" name="transcript" class="form-control" rows="10">{{ $getListeningData[0]->transcript ?? '' }}</textarea>
-                            </div>
-                        </div>
-
-                        {{-- Question --}}
-                        <div class="card mb-3" id="questionrow">
-                            <div class="card-body">
-                                <label>Question</label>
-                                <textarea id="question" name="question" class="form-control" rows="6">{{ $getListeningData[0]->question ?? '' }}</textarea>
-                            </div>
-                        </div>
-
-                        {{-- Answer --}}
-                        <div class="card mb-3" id="answersrow" style="display:none;">
-                            <div class="card-body">
-                                <label>Answer</label>
-                                <textarea id="answer" name="answer" class="form-control" rows="6">{{ $getListeningData[0]->answer ?? '' }}</textarea>
-                            </div>
-                        </div>
-
-                        {{-- Explanation --}}
-                        <div class="card mb-3" id="explanationrow" style="display:none;">
-                            <div class="card-body">
-                                <label>Explanation</label>
-                                <textarea id="explanation" name="explanation" class="form-control" rows="6">{{ $getListeningData[0]->explanation ?? '' }}</textarea>
-                            </div>
-                        </div>
-
-                        {{-- Timer --}}
-                        <div class="card mb-3">
-                            <div class="card-body row">
-                                <div class="col-2">
-                                    <label>Time (Min)</label>
-                                    <input type="number" name="setTimerMin" class="form-control"
-                                        value="{{ explode(':', $getListeningData[0]->exam_duration ?? '1:0')[0] }}">
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Submit --}}
-                        <button class="btn btn-primary">
-                            {{ !empty($getListeningData) ? 'Update' : 'Submit' }}
-                        </button>
-
-                    </form>
-                </div>
             </div>
         </div>
     </div>
+</div>
 
-    {{-- CKEditor --}}
-    <script>
-        CKEDITOR.replace('question');
-        CKEDITOR.replace('transcript');
-        CKEDITOR.replace('answer');
-        CKEDITOR.replace('explanation');
-    </script>
+{{-- JS --}}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+
+<script>
+
+$(document).ready(function(){
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Forms When Part Changes
+    |--------------------------------------------------------------------------
+    */
+
+    $('#partSelect').change(function(){
+
+        let partId = $(this).val();
+
+        if(!partId){
+            $('#formSelect').html('<option value="">Select Form</option>');
+            $('#dynamic-fields').html('');
+            return;
+        }
+
+        $.get('/celpip/get-forms/' + partId, function(forms){
+
+            $('#formSelect').html('<option value="">Select Form</option>');
+
+            forms.forEach(function(form){
+                $('#formSelect').append(
+                    `<option value="${form.id}">${form.name}</option>`
+                );
+            });
+
+            $('#dynamic-fields').html('');
+        });
+
+    });
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Load Fields When Form Changes
+    |--------------------------------------------------------------------------
+    */
+
+    $('#formSelect').change(function(){
+
+        let formId = $(this).val();
+
+        if(!formId){
+            $('#dynamic-fields').html('');
+            return;
+        }
+
+        $.get('/celpip/get-fields/' + formId, function(fields){
+
+            $('#dynamic-fields').html('');
+
+            fields.forEach(function(field){
+
+                let input = '';
+
+                /*
+                |--------------------------------------------------------------------------
+                | TEXT
+                |--------------------------------------------------------------------------
+                */
+                if(field.type === 'text'){
+                    input = `
+                        <input type="text"
+                               name="${field.name}"
+                               class="form-control"
+                               ${field.required ? 'required' : ''}>
+                    `;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | TEXTAREA
+                |--------------------------------------------------------------------------
+                */
+                else if(field.type === 'textarea'){
+                    input = `
+                        <textarea name="${field.name}"
+                                  class="form-control"
+                                  rows="4"
+                                  ${field.required ? 'required' : ''}></textarea>
+                    `;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | FILE
+                |--------------------------------------------------------------------------
+                */
+                else if(field.type === 'file'){
+                    input = `
+                        <input type="file"
+                               name="${field.name}"
+                               class="form-control"
+                               ${field.required ? 'required' : ''}>
+                    `;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | MCQ
+                |--------------------------------------------------------------------------
+                */
+                else if(field.type === 'mcq'){
+
+                    if(field.options){
+                        field.options.forEach(function(option){
+
+                            input += `
+                                <div class="d-flex align-items-center mb-2">
+                                    <input type="radio"
+                                           name="${field.name}"
+                                           value="${option}"
+                                           class="me-2">
+                                    ${option}
+                                </div>
+                            `;
+                        });
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | CHECKBOX (Multiple Answer)
+                |--------------------------------------------------------------------------
+                */
+                else if(field.type === 'checkbox'){
+
+                    if(field.options){
+                        field.options.forEach(function(option){
+
+                            input += `
+                                <div class="d-flex align-items-center mb-2">
+                                    <input type="checkbox"
+                                           name="${field.name}[]"
+                                           value="${option}"
+                                           class="me-2">
+                                    ${option}
+                                </div>
+                            `;
+                        });
+                    }
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | Append Field
+                |--------------------------------------------------------------------------
+                */
+
+                $('#dynamic-fields').append(`
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <label>${field.label}</label>
+                            ${input}
+                        </div>
+                    </div>
+                `);
+
+            });
+
+        });
+
+    });
+
+});
+
+</script>
+
 @endsection

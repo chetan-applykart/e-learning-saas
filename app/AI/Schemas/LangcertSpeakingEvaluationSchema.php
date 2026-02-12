@@ -12,7 +12,7 @@ class LangcertSpeakingEvaluationSchema
     {
         return new ObjectSchema(
             name: 'langcert_speaking_evaluation',
-            description: 'LangCert Speaking Test Evaluation (48 marks)',
+            description: 'LangCert Speaking Evaluation (Total 48 Marks)',
             properties: [
 
                 new NumberSchema('task_fulfilment', '0–16'),
@@ -22,11 +22,11 @@ class LangcertSpeakingEvaluationSchema
                 new NumberSchema('pronunciation', '0–8'),
                 new NumberSchema('total', '0–48'),
 
-                new StringSchema('suggestion_1', 'Short improvement suggestion'),
-                new StringSchema('suggestion_2', 'Short improvement suggestion'),
+                new StringSchema('suggestion_1', 'Improvement suggestion'),
+                new StringSchema('suggestion_2', 'Improvement suggestion'),
                 new StringSchema(
                     'suggestion_3',
-                    'Short improvement suggestion',
+                    'Improvement suggestion',
                     nullable: true
                 ),
             ],
@@ -39,7 +39,6 @@ class LangcertSpeakingEvaluationSchema
                 'total',
                 'suggestion_1',
                 'suggestion_2',
-                'suggestion_3',
             ]
         );
     }
