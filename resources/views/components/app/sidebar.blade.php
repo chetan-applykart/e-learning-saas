@@ -15,43 +15,35 @@
             </a>
         </li>
 
-        {{-- Agar user ke paas niche di gayi kisi bhi ek permission ka access hai --}}
-        @canany(['create-course', 'edit-course', 'delete-course'])
-            <li class="menu-header small text-uppercase">
-                <span class="menu-header-text">CELPIP Questions</span>
-            </li>
+   
+        @foreach ($exams as $exam)
+    @php
+        $examSlug = Str::slug($exam->name);
 
-            <li class="menu-item {{ Request::is('celpip*') ? 'active open' : '' }}">
-                <a href="javascript:void(0);" class="menu-link menu-toggle">
-                    <i class="menu-icon tf-icons bx bx-dock-top"></i>
-                    <div data-i18n="Account Settings">Celpip Add question</div>
-                </a>
-                <ul class="menu-sub">
-                    {{-- Inhe aap alag-alag permissions se bhi control kar sakte hain --}}
-                    <li class="menu-item">
-                        <a href="{{ route('tenant.celpip.listening.add') }}" class="menu-link">
-                            <div data-i18n="listening">Listening</div>
+        // can() method use karein, ye error nahi dega agar permission delete ho gayi ho
+        $hasPermission = auth()->user()->can($examSlug) ||
+                         auth()->user()->can($examSlug . '-access');
+    @endphp
+
+    @if ($hasPermission)
+        <li class="menu-item {{ Request::is('tenant/questions/' . $exam->id . '*') ? 'active open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-book-open"></i>
+                <div class="text-capitalize">{{ $exam->name }}</div>
+            </a>
+
+            <ul class="menu-sub">
+                @foreach ($exam->modules as $module)
+                    <li class="menu-item {{ request()->is('tenant/questions/'.$exam->id.'/'.$module->id) ? 'active' : '' }}">
+                        <a href="{{ route('tenant.questions.index', [$exam->id, $module->id]) }}" class="menu-link">
+                            <div>{{ $module->name }}</div>
                         </a>
                     </li>
-                    {{--
-                    <li class="menu-item">
-                        <a href="{{ route('app.celpip.reading.add.question') }}" class="menu-link">
-                            <div data-i18n="Reading">Reading</div>
-                        </a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{{ route('app.celpip.speaking.add.question') }}" class="menu-link">
-                            <div data-i18n="Speaking">Speaking</div>
-                        </a>
-                    </li>
-                    <li class="menu-item">
-                        <a href="{{ route('app.celpip.writing.add.question') }}" class="menu-link">
-                            <div data-i18n="Writing">Writing</div>
-                        </a>
-                    </li> --}}
-                </ul>
-            </li>
-        @endcanany
+                @endforeach
+            </ul>
+        </li>
+    @endif
+@endforeach
 
         @canany(['manage-users', 'manage-roles'])
             <li class="menu-header small text-uppercase">
@@ -80,6 +72,23 @@
                     <a href="{{ route('tenant.role.create') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
                         <div data-i18n="Roles">Roles Create</div>
+                    </a>
+                </li>
+            @endcan
+
+             @can('manage-roles')
+                <li class="menu-item {{ Request::is('users*') ? 'active' : '' }}">
+                    <a href="{{ route('tenant.form.create') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
+                        <div data-i18n="Roles">from create</div>
+                    </a>
+                </li>
+            @endcan
+             @can('manage-roles')
+                <li class="menu-item {{ Request::is('users*') ? 'active' : '' }}">
+                    <a href="{{ route('tenant.form.builder') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
+                        <div data-i18n="Roles">from create</div>
                     </a>
                 </li>
             @endcan

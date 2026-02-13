@@ -218,79 +218,81 @@ class CelpipController extends Controller
 
     //     // $answer = $request->answer;
 
-    //     $result = LangcertImageCheckService::checkWritingImage($question, $answer);
+        // $result = LangcertImageCheckService::checkWritingImage($question, $answer);
 
     //     dd($result);
 
     //     return view('tenant.celpip.writing.result', compact('result'));
     // }
 
-    // public function submitWriting(Request $request, CelpipAnswerCheckService $answerCheckService)
-    // {
-    //     // Student Answer
-    //     $answer = "
-    // The provided column chart illustrates the consumer preferences for various soft drink brands. It is evident from the data that Coca Cola is the most dominant brand in the market, capturing the highest preference at 35%. This is followed by Pepsi, which holds a significant share of 25%, making these two brands the primary leaders in the industry.
+    public function submitWriting(Request $request, CelpipAnswerCheckService $answerCheckService)
+    {
+        // Student Answer
+        $answer = "
+    The provided column chart illustrates the consumer preferences for various soft drink brands. It is evident from the data that Coca Cola is the most dominant brand in the market, capturing the highest preference at 35%. This is followed by Pepsi, which holds a significant share of 25%, making these two brands the primary leaders in the industry.
 
-    // In contrast, other brands show a relatively lower preference among consumers. Sprite stands at 18%, while Diet Coke accounts for 12% of the total share. The least preferred brand according to the chart is Fanta, which sits at only 10%.
+    In contrast, other brands show a relatively lower preference among consumers. Sprite stands at 18%, while Diet Coke accounts for 12% of the total share. The least preferred brand according to the chart is Fanta, which sits at only 10%.
 
-    // Overall, the chart highlights a clear hierarchy in the soft drink market. There is a substantial 25% gap between the most popular brand, Coca Cola, and the least popular one, Fanta. The data suggests that traditional cola-flavored drinks (Coca Cola and Pepsi) collectively command a massive 60% of the total brand preference, significantly outperforming lemon-lime and orange-flavored alternatives. This indicates a strong consumer loyalty towards the top two global giants in the beverage sector
-    // // ";
-
-    //     // Question text
-    //     $question = "
-    // Write about 200 words describing and explaining the situation shown in the image.
-    // Focus only on the information and context presented in the image.
+    Overall, the chart highlights a clear hierarchy in the soft drink market. There is a substantial 25% gap between the most popular brand, Coca Cola, and the least popular one, Fanta. The data suggests that traditional cola-flavored drinks (Coca Cola and Pepsi) collectively command a massive 60% of the total brand preference, significantly outperforming lemon-lime and orange-flavored alternatives. This indicates a strong consumer loyalty towards the top two global giants in the beverage sector
     // ";
 
-
-    //     //  IMAGE URL (as requested)
-    //     $imageUrl = "https://www.slideteam.net/media/catalog/product/cache/1280x720/s/o/soft_drinks_brand_preference_column_chart_slide01.jpg";
-    //     $result = LangcertImageCheckService::checkWritingImage(
-    //         $question,
-    //         $answer,
-    //         $imageUrl
-    //     );
-
-    //     dd($result);
-
-    //     return view('tenant.celpip.writing.result', compact('result'));
-    // }
+        // Question text
+        $question = "
+    Write about 200 words describing and explaining the situation shown in the image.
+    Focus only on the information and context presented in the image.
+    ";
 
 
-    public function submitWriting(Request $request)
-    {
-        Log::info('submitWriting called');
-        if (!$request->hasFile('audio')) {
-            return "Audio file missing in request!";
-        }
-
-        Log::info('Request data', [
-            'question' => $request->question,
-            'has_audio' => $request->hasFile('audio'),
-        ]);
-
-        $request->validate([
-            'question' => 'required|string|min:10',
-            'audio'    => 'required|file|max:10240',
-        ]);
-
-        Log::info('Validation passed');
-
-        $audioPath = $request->file('audio')->store('speaking_audio');
-        Log::info('Audio stored at', ['path' => $audioPath]);
-
-        $service = new LangcertSpeakingEvaluationService();
-        Log::info('Service instantiated');
-        $imagePath = "";
-        $result = $service->evaluate(
-            $request->question,
-            storage_path('app/' . $audioPath),
-            $imagePath
+        //  IMAGE URL (as requested)
+        $imageUrl = "https://www.slideteam.net/media/catalog/product/cache/1280x720/s/o/soft_drinks_brand_preference_column_chart_slide01.jpg";
+        $result = LangcertImageCheckService::checkWritingImage(
+            $question,
+            $answer,
+            $imageUrl
         );
+
         dd($result);
 
-        Log::info('Evaluation completed', $result);
-
-        return response()->json($result);
+        return view('tenant.celpip.writing.result', compact('result'));
     }
+
+
+    // public function submitWriting(Request $request)
+    // {
+    //     Log::info('submitWriting called');
+    //     if (!$request->hasFile('audio')) {
+    //         return "Audio file missing in request!";
+    //     }
+
+    //     Log::info('Request data', [
+    //         'question' => $request->question,
+    //         'has_audio' => $request->hasFile('audio'),
+    //     ]);
+
+    //     $request->validate([
+    //         'question' => 'required|string|min:10',
+    //         'audio'    => 'required|file|max:10240',
+    //     ]);
+
+    //     Log::info('Validation passed');
+
+    //     $audioPath = $request->file('audio')->store('speaking_audio');
+    //     Log::info('Audio stored at', ['path' => $audioPath]);
+
+    //     $service = new LangcertSpeakingEvaluationService();
+    //     Log::info('Service instantiated');
+    //     $imagePath = "";
+    //     $result = $service->evaluate(
+    //         $request->question,
+    //         storage_path('app/' . $audioPath),
+    //         $imagePath
+    //     );
+    //     dd($result);
+
+    //     Log::info('Evaluation completed', $result);
+
+    //     return response()->json($result);
+    // }
+
+    
 }

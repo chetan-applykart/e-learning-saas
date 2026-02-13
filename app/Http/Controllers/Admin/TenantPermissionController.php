@@ -55,9 +55,12 @@ class TenantPermissionController extends Controller
                 'guard_name' => 'web'
             ]);
 
-            $role->syncPermissions($request->permissions ?? []);
+            // $role->syncPermissions($request->permissions ?? []);
 
+            // app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
             app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
+
+            $role->syncPermissions($request->permissions ?? []);
         });
 
         return redirect()

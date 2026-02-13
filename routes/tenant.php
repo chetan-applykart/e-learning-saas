@@ -97,13 +97,7 @@ Route::middleware([
     });
 
 
-    Route::get('/form-builder', [FormBuilderController::class, 'create'])->name('form.builder');
-    Route::post('/form-builder', [FormBuilderController::class, 'store'])->name('form.builder.store');
 
-    Route::get('/get-modules/{exam}', [FormBuilderController::class, 'getModules']);
-    Route::get('/get-parts/{module}', [FormBuilderController::class, 'getParts']);
-    Route::get('/get-forms/{part}', [FormBuilderController::class, 'getForms']);
-    Route::get('/get-fields/{form}', [FormBuilderController::class, 'getFields']);
 
 
 
@@ -163,13 +157,47 @@ Route::middleware([
             Route::post('/role/assign-by-email', [RoleController::class, 'assignByEmail'])->name('role.assign_email');
 
             Route::get('/users', [RoleController::class, 'index'])->name('users.index');
-    Route::get('/users/{user}/access', [RoleController::class, 'editAccess'])->name('users.access');
-    Route::post('/users/{user}/access', [RoleController::class, 'updateAccess'])->name('users.access.update');
+            Route::get('/users/{user}/access', [RoleController::class, 'editAccess'])->name('users.access');
+            Route::post('/users/{user}/access', [RoleController::class, 'updateAccess'])->name('users.access.update');
 
-    // Role management
-    Route::post('/role/store', [RoleController::class, 'storeRole'])->name('role.store');
-    Route::post('/role/update-global-permissions', [RoleController::class, 'updateRolePermissions'])->name('role.update_permissions');
+            // Role management
+            Route::post('/role/store', [RoleController::class, 'storeRole'])->name('role.store');
+            Route::post('/role/update-global-permissions', [RoleController::class, 'updateRolePermissions'])->name('role.update_permissions');
+
+
+            // from
+            Route::get('/form-create', [FormBuilderController::class, 'FromCreate'])->name('form.create');
+            Route::post('/form-store', [FormBuilderController::class, 'formstore'])->name('form.store');
+
+            Route::get('/form-builder', [FormBuilderController::class, 'create'])->name('form.builder');
+            Route::post('/form-builder', [FormBuilderController::class, 'store'])->name('form.builder.store');
+
+            Route::get('/get-modules/{exam}', [FormBuilderController::class, 'getModules']);
+            Route::get('/get-parts/{module}', [FormBuilderController::class, 'getParts']);
+            Route::get('/get-forms/{part}', [FormBuilderController::class, 'getForms']);
+            Route::get('/get-fields/{form}', [FormBuilderController::class, 'getFields']);
+            Route::get('/get-forms-by-part/{partId}', [FormBuilderController::class, 'getFormsByPart']);
+            Route::get('/get-form-fields/{formId}', [FormBuilderController::class, 'getFormFields']);
+            Route::get('/get-modules/{examId}', [FormBuilderController::class, 'getModules']);
+            Route::get('/get-parts/{moduleId}', [FormBuilderController::class, 'getParts']);
+            Route::get('/get-form-data/{partId}', [FormBuilderController::class, 'getFormData']);
+            Route::get('/get-forms-by-part/{partId}', [FormBuilderController::class, 'getFormsByPart']);
+            Route::get('/get-form-fields/{formId}', [FormBuilderController::class, 'getFormFields']);
+
+
+            Route::get('/questions/{exam_id}/{module_id}', [FormBuilderController::class, 'manageQuestions'])
+                ->name('questions.index');
+
+            Route::get('/get-modules/{examId}', [FormBuilderController::class, 'getModules']);
         });
+    });
+
+    Route::prefix('admin')->group(function () {
+        Route::get('/get-modules/{examId}', [FormBuilderController::class, 'getModules']);
+        Route::get('/get-parts/{moduleId}', [FormBuilderController::class, 'getParts']);
+        Route::get('/get-form-data/{partId}', [FormBuilderController::class, 'getFormData']);
+        Route::get('/get-forms-by-part/{partId}', [FormBuilderController::class, 'getFormsByPart']);
+        Route::get('/get-form-fields/{formId}', [FormBuilderController::class, 'getFormFields']);
     });
 
     // Route::middleware(['auth', 'verified'])->group(function () {
