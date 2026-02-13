@@ -57,8 +57,8 @@
 
     <ul class="menu-inner py-1">
         <!-- Dashboard -->
-        <li class="menu-item active">
-            <a href="index.html" class="menu-link">
+        <li class="menu-item {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+            <a href="{{route('admin.dashboard')}}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-home-circle"></i>
                 <div data-i18n="Analytics">Dashboard</div>
             </a>
@@ -72,15 +72,15 @@
             </a>
 
             <ul class="menu-sub">
+
                 <li class="menu-item {{ request()->routeIs('admin.tenant.create') ? 'active' : '' }}">
                     <a href="{{ route('admin.tenant.create') }}" class="menu-link">
-                        <i class="menu-icon tf-icons bx bx-user-plus"></i>
-                        <div data-i18n="Tenant Create">Tenant Create</div>
+                        <div data-i18n="Without navbar">Tenant Create</div>
                     </a>
                 </li>
-                <li class="menu-item">
-                    <a href="layouts-without-navbar.html" class="menu-link">
-                        <div data-i18n="Without navbar">Without navbar</div>
+                 <li class="menu-item {{ request()->routeIs('admin.tenants') ? 'active' : '' }}">
+                    <a href="{{ route('admin.tenants') }}" class="menu-link">
+                        <div data-i18n="Without navbar">Tenant Permission</div>
                     </a>
                 </li>
                 <li class="menu-item">

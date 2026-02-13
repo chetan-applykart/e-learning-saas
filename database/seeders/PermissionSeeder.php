@@ -4,10 +4,11 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class PermissionSeeder extends Seeder
 {
-    public function run(): void
+   public function run(): void
     {
         $permissions = [
             'manage-users',
@@ -24,5 +25,11 @@ class PermissionSeeder extends Seeder
                 'guard_name' => 'web',
             ]);
         }
+
+        $adminRole = Role::firstOrCreate(['name' => 'tenant-admin', 'guard_name' => 'web']);
+        $adminRole->syncPermissions(Permission::all());
+
+        $managerRole = Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'web']);
+        $managerRole->syncPermissions(['create-course', 'edit-course', 'view-reports']);
     }
 }

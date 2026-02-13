@@ -28,7 +28,7 @@
                                 <span class="role-badge">Tenant</span>
                             </td>
                             <td>
-                                <a href="{{ route('superadmin.tenants.permissions', $tenant->id) }}" class="btn-manage">
+                                <a href="{{ route('admin.tenants.permissions', $tenant->id) }}" class="btn-manage">
                                     Manage Permissions
                                 </a>
                             </td>

@@ -49,14 +49,13 @@ Route::middleware([
             'password' => Hash::make('123456'),
         ]);
 
-        // 2. User ko 'tenant-admin' role assign karein
-        // (Ye wahi role hai jisko aapne Super Admin panel se permissions di hain)
+
         $user->assignRole('tenant-admin');
 
         return response()->json([
             'message' => 'User created and role assigned!',
             'user' => $user,
-            'roles' => $user->getRoleNames() // Check karne ke liye ki role mila ya nahi
+            'roles' => $user->getRoleNames()
         ]);
     });
 
@@ -73,19 +72,15 @@ Route::middleware([
     });
 
     Route::get('/fix-admin-permissions', function () {
-        // 1. User ko dhundein
         $user = User::where('email', 'admin@gmail.com')->first();
 
         if (!$user) {
             return 'User admin@gmail.com nahi mila!';
         }
 
-        // 2. User ki saari "Direct Permissions" saaf karein
-        // Isse aapka 'direct' wala array empty ho jayega
         $user->syncPermissions([]);
 
-        // 3. Sahi Role assign karein (tenant-admin)
-        // Pehle purane roles hata kar fresh role dena behtar hai
+
         $user->syncRoles(['tenant-admin']);
 
         return 'Direct permissions cleared and "tenant-admin" role assigned successfully!';
@@ -130,11 +125,20 @@ Route::middleware([
         });
 
     Route::post('/admin/save-full-exam-structure', [CelpipController::class, 'storeFullStructure'])->name('exam.full.store');
-    // Cascading dropdowns ke liye
     Route::get('/get-modules/{id}', [CelpipController::class, 'getModules']);
     Route::get('/get-parts/{id}', [CelpipController::class, 'getParts']);
 
+    Route::middleware(['web'])->group(function () {
 
+        Route::prefix('user')->as('user.')->group(function () {
+
+            Route::get('register', [AuthController::class, 'register'])
+                ->name('register');
+
+
+            Route::post('register', [AuthController::class, 'store'])->name('register.store');
+        });
+    });
 
     // Auth routes
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
@@ -142,15 +146,39 @@ Route::middleware([
     Route::post('/logout', [AuthController::class, 'logout'])->name('app.logout');
 
     Route::middleware(['auth', 'verified'])->group(function () {
-        // User List Page
-        Route::get('/users', [RoleController::class, 'index'])->name('tenant.users.index');
 
-        // Edit User Access Page
-        Route::get('/users/{user}/access', [RoleController::class, 'editAccess'])->name('tenant.users.access');
+        Route::prefix('tenant')->as('tenant.')->group(function () {
 
-        // Update User Access Logic
-        Route::post('/users/{user}/access', [RoleController::class, 'updateAccess'])->name('tenant.users.access.update');
+
+            Route::get('/users', [RoleController::class, 'index'])->name('users.index');
+
+            Route::get('/users/{user}/access', [RoleController::class, 'editAccess'])->name('users.access');
+
+            Route::post('/users/{user}/access', [RoleController::class, 'updateAccess'])->name('users.access.update');
+
+            // --- Role Management (New Routes) ---
+
+            Route::get('/role/create', [RoleController::class, 'createRole'])->name('role.create');
+            Route::post('/role/store', [RoleController::class, 'storeRole'])->name('role.store');
+            Route::post('/role/assign-by-email', [RoleController::class, 'assignByEmail'])->name('role.assign_email');
+
+            Route::get('/users', [RoleController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}/access', [RoleController::class, 'editAccess'])->name('users.access');
+    Route::post('/users/{user}/access', [RoleController::class, 'updateAccess'])->name('users.access.update');
+
+    // Role management
+    Route::post('/role/store', [RoleController::class, 'storeRole'])->name('role.store');
+    Route::post('/role/update-global-permissions', [RoleController::class, 'updateRolePermissions'])->name('role.update_permissions');
+        });
     });
+
+    // Route::middleware(['auth', 'verified'])->group(function () {
+    //     Route::get('/users', [RoleController::class, 'index'])->name('tenant.users.index');
+
+    //     Route::get('/users/{user}/access', [RoleController::class, 'editAccess'])->name('tenant.users.access');
+
+    //     Route::post('/users/{user}/access', [RoleController::class, 'updateAccess'])->name('tenant.users.access.update');
+    // });
 
     // Route::get('/dashboard', function () {
     //     //   dd(auth()->user());

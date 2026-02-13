@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TenantPermission extends Model
 {
-    protected $connection = 'central'; // 🔥 THIS WAS MISSING
+    protected $connection = 'central'; 
 
     protected $table = 'tenant_permissions';
 

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\TenantPermissionController;
@@ -14,9 +15,9 @@ use Illuminate\Support\Facades\Route;
 
 foreach (config('tenancy.central_domains') as $domain) {
     Route::domain($domain)->group(function () {
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard');
-        });
+        // Route::get('/dashboard', function () {
+        //     return view('admin.dashboard');
+        // });
 
         // seed test tenant
         Route::get('/seed-tenant', function () {
@@ -51,19 +52,31 @@ foreach (config('tenancy.central_domains') as $domain) {
         // Route::post('/tenant-permissions', [TenantPermissionController::class, 'store'])->name('admin.tenant.permissions.store');
 
 
-Route::group(['prefix' => 'super-admin', 'as' => 'admin.'], function () {
+        Route::group(['prefix' => 'admin', 'as' => 'admin.'], function () {
 
-    Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenant.create');
-    Route::post('/tenants/store', [TenantController::class, 'store'])->name('tenant.store');
-});
-    Route::get('/tenants', [TenantPermissionController::class, 'index'])
-        ->name('superadmin.tenants');
+            Route::get('/', [AuthController::class, 'loginShow'])->name('login');
+            Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 
-    Route::get('/tenants/{id}/permissions', [TenantPermissionController::class, 'edit'])
-        ->name('superadmin.tenants.permissions');
 
-    Route::post('/tenants/{id}/permissions', [TenantPermissionController::class, 'update'])
-        ->name('superadmin.tenants.permissions.update');
+            //  dashboard route
+            Route::get('/dashboard', [AuthController::class, 'index'])->name('dashboard');
+
+
+            // tenant create
+            Route::get('/tenants/create', [TenantController::class, 'create'])->name('tenant.create');
+
+            Route::post('/tenants/store', [TenantController::class, 'store'])->name('tenant.store');
+            Route::get('/tenants', [TenantPermissionController::class, 'index'])
+                ->name('tenants');
+
+
+            // tenant permission
+            Route::get('/tenants/{id}/permissions', [TenantPermissionController::class, 'edit'])
+                ->name('tenants.permissions');
+
+            Route::post('/tenants/{id}/permissions', [TenantPermissionController::class, 'update'])
+                ->name('tenants.permissions.update');
+        });
 
         // Route::post('/tenant-permissions', function () {
         //     dd("dejdcd");

@@ -33,7 +33,7 @@
                             <div data-i18n="listening">Listening</div>
                         </a>
                     </li>
-{{--
+                    {{--
                     <li class="menu-item">
                         <a href="{{ route('app.celpip.reading.add.question') }}" class="menu-link">
                             <div data-i18n="Reading">Reading</div>
@@ -72,6 +72,14 @@
                     <a href="{{ route('tenant.users.index') }}" class="menu-link">
                         <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
                         <div data-i18n="Roles">Roles & Permissions</div>
+                    </a>
+                </li>
+            @endcan
+            @can('manage-roles')
+                <li class="menu-item {{ Request::is('users*') ? 'active' : '' }}">
+                    <a href="{{ route('tenant.role.create') }}" class="menu-link">
+                        <i class="menu-icon tf-icons bx bx-lock-open-alt"></i>
+                        <div data-i18n="Roles">Roles Create</div>
                     </a>
                 </li>
             @endcan

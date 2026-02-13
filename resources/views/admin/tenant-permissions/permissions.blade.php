@@ -5,10 +5,10 @@
     <div class="card">
         <div class="card-header d-flex justify-content-between align-items-center">
             <h5 class="mb-0">Manage Permissions for Tenant: <span class="text-primary">{{ $tenant->id }}</span></h5>
-            <a href="{{ route('superadmin.tenants') }}" class="btn btn-secondary btn-sm">Back</a>
+            <a href="{{ route('admin.tenants') }}" class="btn btn-secondary btn-sm">Back</a>
         </div>
         <div class="card-body">
-            <form action="{{ route('superadmin.tenants.permissions.update', $tenant->id) }}" method="POST">
+            <form action="{{ route('admin.tenants.permissions.update', $tenant->id) }}" method="POST">
                 @csrf
 
                 <p class="text-muted small text-uppercase fw-bold">Select permissions to assign to Tenant Admin</p>
